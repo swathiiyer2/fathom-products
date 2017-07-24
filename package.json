@@ -1,0 +1,45 @@
+{
+  "name": "fathom-product",
+  "description": "Product extraction using Fathom.",
+  "version": "2.1.0",
+  "author": "Swathi Iyer <siyer@mozilla.com>",
+  "bugs": {
+    "url": "https://github.com/mozilla/fathom/issues"
+  },
+  "dependencies": {
+    "wu": "^2.1.0"
+  },
+  "devDependencies": {
+    "chai": "^4.0.2",
+    "coveralls": "^2.11.11",
+    "eslint": "^3.7.1",
+    "eslint-plugin-node": "^5.1.0",
+    "file-url": "^2.0.2",
+    "istanbul": "^0.4.5",
+    "jsdom": "^8.5.0",
+    "leven": "^2.1.0",
+    "mocha": "^3.2.0",
+    "selenium-webdriver": "^3.4.0"
+  },
+  "engines": {
+    "node": ">= 6.0.0"
+  },
+  "homepage": "https://github.com/mozilla/fathom",
+  "keywords": [
+    "semantic extraction",
+    "scoring",
+    "ranking",
+    "clustering"
+  ],
+  "license": "MPL-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mozilla/fathom.git"
+  },
+  "scripts": {
+    "coveralls": "cat ./coverage/lcov.info | coveralls",
+    "lint": "make lint",
+    "pretest": "npm run lint",
+    "test": "istanbul cover _mocha"
+  }
+}
