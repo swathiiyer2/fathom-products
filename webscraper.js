@@ -11,7 +11,7 @@ if (require.main === module) {
   const dirs = p => readdirSync(p).filter(f => statSync(p+"/"+f).isDirectory());
   const folders = dirs(join(dirname(__dirname), 'fathom-products' , 'product_classification_test_data'));
   driver.manage().window().maximize();
-  driver.manage().timeouts().setScriptTimeout(100000); // 10 seconds
+  driver.manage().timeouts().setScriptTimeout(100000); 
 
 
   folders.forEach(function(item){

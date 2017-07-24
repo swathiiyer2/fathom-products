@@ -4,10 +4,11 @@
   "version": "2.1.0",
   "author": "Swathi Iyer <siyer@mozilla.com>",
   "bugs": {
-    "url": "https://github.com/mozilla/fathom/issues"
+    "url": "https://github.com/swathiiyer2/fathom-products/issues"
   },
   "dependencies": {
-    "wu": "^2.1.0"
+    "wu": "^2.1.0",
+    "fathom-web": "^2.1.0"
   },
   "devDependencies": {
     "chai": "^4.0.2",
@@ -24,7 +25,7 @@
   "engines": {
     "node": ">= 6.0.0"
   },
-  "homepage": "https://github.com/mozilla/fathom",
+  "homepage": "https://github.com/swathiiyer2/fathom-products",
   "keywords": [
     "semantic extraction",
     "scoring",
@@ -34,7 +35,7 @@
   "license": "MPL-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mozilla/fathom.git"
+    "url": "https://github.com/swathiiyer2/fathom-products.git"
   },
   "scripts": {
     "coveralls": "cat ./coverage/lcov.info | coveralls",
