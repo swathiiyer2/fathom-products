@@ -20,8 +20,9 @@ const leven = require('leven');
 const {dom, props, out, rule, ruleset, score, type} = require('fathom-web');
 const {staticDom} = require('fathom-web/utils');
 const tuningRoutines = {'title' : tunedTitleFnodes,
-                        'price' : tunedPriceFnodes,
-                        'image' : tunedImageFnodes};
+                        // 'price' : tunedPriceFnodes,
+                        // 'image' : tunedImageFnodes
+                        };
 
 
 // const {domSort, staticDom} = require('../../utils');
@@ -142,21 +143,21 @@ function tunedImageFnodes() {
     // return tuningRoutine;
 }
 
-function tunedTitleFnodes() {
-    // const rules = ruleset(
-    //   //get all title tags in the inserted fixture
-    //   rule(dom('div#fixture > title'), type('titleish')),
-    //
-    //   //return image with max score
-    //   rule(type('titleish').max(), out('product-title'))
-    //
-    // );
-    //
-    // function tuningRoutine(doc) {
-    //     return rules.against(doc).get('product-title');
-    // }
-    //
-    // return tuningRoutine;
+function tunedTitleFnodes(dict) {
+    const rules = ruleset(
+      //get all title tags in the inserted fixture
+      rule(dom('title'), type('titleish')),
+
+      //return image with max score
+      rule(type('titleish').max(), out('product-title'))
+
+    );
+
+    function tuningRoutine(doc) {
+        return rules.against(doc).get('product-title');
+    }
+
+    return tuningRoutine;
 }
 
 function tunedPriceFnodes() {
@@ -227,15 +228,15 @@ class DiffStats {
         if (this.feature === 'image') {
           //compare images by src
           expectedText = expectedDom.body.firstChild.src;
-          gotText = this.tuningRoutine(sourceDom, dict).map(fnode => fnode.element.src)[0];
+          gotText = this.tuningRoutine()(sourceDom).map(fnode => fnode.element.src)[0];
         } else if (this.feature === 'title') {
           //compare innerHTML text of titles
           expectedText = expectedDom.head.firstChild.innerHTML;
-          gotText = this.tuningRoutine(sourceDom, dict).map(fnode => fnode.element.innerHTML)[0];
+          gotText = this.tuningRoutine(dict)(sourceDom).map(fnode => fnode.element.innerHTML)[0];
         } else if (this.feature === 'price') {
           //strip whitespace and dollar sign if there is one when comparing price
           expectedText = expectedDom.body.firstChild.textContent.replace('$', '').trim();
-          gotText = this.tuningRoutine(sourceDom, dict).map(fnode => fnode.element.textContent.replace('$', '').trim())[0];
+          gotText = this.tuningRoutine()(sourceDom).map(fnode => fnode.element.textContent.replace('$', '').trim())[0];
         }
 
         this.numTests++;
@@ -285,8 +286,8 @@ function deviationScore(folders, feature, coeffs = []) {
       const domFromFile = fileName => staticDom(readFileSync(join(dirname(__dirname), 'fathom-products', 'product_classification_test_data', store, fileName)));
       const dict = createDict(store, domFromFile('source.html'));
       const pair = [domFromFile('expected-' + feature + '.html'), domFromFile('source.html')];
-      // stats.compare(pair[0], pair[1], dict);
-      // console.log(stats.score());
+      stats.compare(pair[0], pair[1], dict);
+      console.log(stats.score());
     });
 
     // return stats.score();
