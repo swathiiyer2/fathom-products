@@ -19,131 +19,81 @@ const {dirname, join} = require('path');
 const leven = require('leven');
 const {dom, props, out, rule, ruleset, score, type} = require('fathom-web');
 const {staticDom} = require('fathom-web/utils');
-const tuningRoutines = {'title' : tunedTitleFnodes,
+const tuningRoutines = {
+                        // 'title' : tunedTitleFnodes,
                         // 'price' : tunedPriceFnodes,
-                        // 'image' : tunedImageFnodes
+                        'image' : tunedImageFnodes
                         };
 
+function tunedImageFnodes(nodeToCssMap) {
+    let title = '';
 
-// const {domSort, staticDom} = require('../../utils');
-// const {Annealer} = require('../../optimizers');
-// const {productImageDocPairs, productTitleDocPairs, productPriceDocPairs} = require('./docpairs');
+    function imageSize(fnode) {
+      const css = nodeToCssMap.get(fnode.element);
+      return (css.left - css.right) * (css.top - css.bottom);
+    }
 
+    function imageHasSrc(fnode) {
+      return fnode.element.hasAttribute('src') && fnode.element.getAttribute('src') !== '';
+    }
 
-// function euclideanDistance(nodeA, nodeB){
-//
-//   /* getBoundingClientRect is relative to the viewport, should be fine for tests and demos
-//   but might need to be tweaked or replaced with a different call when integrated
-//   into a real-life browsing session, where the user might have scrolled */
-//
-//   var rectA = nodeA.getBoundingClientRect();
-//   var rectB = nodeB.getBoundingClientRect();
-//   var x = rectB.left - rectA.left;
-//   var y = rectB.bottom - rectB.bottom;
-//   return Math.sqrt(Math.pow(x,2) + Math.pow(y,2));
-// }
+    function imageTitle(fnode) {
+      if (title === undefined) {
+        return 1;
+      }
 
-function tunedImageFnodes() {
-    // function imageSize(fnode) {
-    //   return fnode.element.offsetWidth * fnode.element.offsetHeight;
-    // }
-    //
-    // function imageHasSrc(fnode) {
-    //   return fnode.element.hasAttribute('src') && fnode.element.getAttribute('src') !== '';
-    // }
-    //
-    // function imageTitle(fnode) {
-    //   var title = document.getElementsByTagName('title')[1];
-    //   if (title === undefined) {
-    //     return 1;
-    //   }
-    //
-    //   if (fnode.element.getAttribute('title') &&
-    //      (fnode.element.getAttribute('title').includes(title.innerHTML) || title.innerHTML.includes(fnode.element.getAttribute('title'))) ||
-    //       fnode.element.getAttribute('alt') &&
-    //      (fnode.element.getAttribute('alt').includes(title.innerHTML) || title.innerHTML.includes(fnode.element.getAttribute('alt')))) {
-    //            return 10000;
-    //   }
-    //   return 1;
-    // }
-    //
-    // function keywords(fnode) {
-    //   if(fnode.element.hasAttribute('src') && fnode.element.src.match(/(thumb|logo|icon)/i)){
-    //     return 0;
-    //   } else if (fnode.element.hasAttribute('src') && fnode.element.src.match(/(hero|main|product|large)/i)){
-    //     return 1000;
-    //   }
-    //   return 1;
-    // }
-    //
-    // function imageType(fnode){
-    //   if(fnode.element.hasAttribute('src') && fnode.element.src.match(/(jpg|jpeg)/i)){
-    //     return 1000;
-    //   } else if (fnode.element.hasAttribute('src') && fnode.element.src.match(/(png|webp)/i)){
-    //     return 0;
-    //   }
-    //   return 1;
-    // }
-    //
-    // function titleInSrc(fnode){
-    //   var title = document.getElementsByTagName('title')[1];
-    //   if (title === undefined) {
-    //     return 1;
-    //   }
-    //
-    //   var arr = title.innerHTML.replace('|', '').split(' ');
-    //   var regexstring = '';
-    //   for(var i = 0; i < arr.length; i++){
-    //     regexstring += arr[i];
-    //     if(i !== arr.length - 1){
-    //       regexstring += "|";
-    //     }
-    //   }
-    //
-    //   var regex = new RegExp(regexstring, "gi");
-    //
-    //   if(fnode.element.hasAttribute('src') && fnode.element.src.match(regex)){
-    //     return 1000 * fnode.element.src.match(regex).length;
-    //   }
-    //
-    //   return 1;
-    // }
-    //
-    // const rules = ruleset(
-    //   //get all images
-    //   rule(dom('img'), type('images')),
-    //
-    //   //better score for larger images
-    //   rule(type('images'), score(imageSize)),
-    //
-    //   //jpegs used more often than pngs
-    //   rule(type('images'), score(imageType)),
-    //
-    //   //make sure image has src
-    //   rule(type('images'), score(imageHasSrc)),
-    //
-    //   //image title matches page title
-    //   rule(type('images'), score(imageTitle)),
-    //
-    //   //image title contained in image src
-    //   rule(type('images'), score(titleInSrc)),
-    //
-    //   //not to be confused with the thumbnail or logo
-    //   rule(type('images'), score(keywords)),
-    //
-    //   //return image with max score
-    //   rule(type('images').max(), out('product-image'))
-    //
-    // );
-    //
-    // function tuningRoutine(doc) {
-    //     return rules.against(doc).get('product-image');
-    // }
-    //
-    // return tuningRoutine;
+      if (fnode.element.getAttribute('title') &&
+         (fnode.element.getAttribute('title').includes(title) || title.includes(fnode.element.getAttribute('title'))) ||
+          fnode.element.getAttribute('alt') &&
+         (fnode.element.getAttribute('alt').includes(title) || title.includes(fnode.element.getAttribute('alt')))) {
+               return 100;
+      }
+      return 1;
+    }
+
+    function keywords(fnode) {
+      if(fnode.element.hasAttribute('src') && fnode.element.src.match(/(thumb|logo|icon)/i)){
+        return 0.5;
+      } else if (fnode.element.hasAttribute('src') && fnode.element.src.match(/(hero|main|product|feature)/i) ||
+                 fnode.element.id.match(/(hero|main|product|large|feature)/i) ||
+                 fnode.element.classList[0] && fnode.element.classList[0].match(/(hero|main|product|primary|feature)/i) ||
+                 fnode.element.hasAttribute('itemprop') && fnode.element.getAttribute('itemprop').match(/(image|main|product|hero|feature)/i)){
+        return 1000;
+      }
+      return 1;
+    }
+
+    const rules = ruleset(
+      //get all images
+      rule(dom('img'), type('images')),
+
+      //better score for larger images
+      rule(type('images'), score(imageSize)),
+
+      //make sure image has src
+      rule(type('images'), score(imageHasSrc)),
+
+      //image title matches page title
+      rule(type('images'), score(imageTitle)),
+
+      //punish/bonus for good/bad css in class, id, url, etc.
+      rule(type('images'), score(keywords)),
+
+      //return image with max score
+      rule(type('images').max(), out('product-image'))
+
+    );
+
+    function tuningRoutine(doc) {
+        title = tunedTitleFnodes(nodeToCssMap)(doc).map(fnode => fnode.element.innerHTML)[0];
+        return rules.against(doc).get('product-image');
+    }
+
+    return tuningRoutine;
 }
 
-function tunedTitleFnodes(dict) {
+function tunedTitleFnodes(nodeToCssMap) {
+
     const rules = ruleset(
       //get all title tags in the inserted fixture
       rule(dom('title'), type('titleish')),
@@ -160,54 +110,54 @@ function tunedTitleFnodes(dict) {
     return tuningRoutine;
 }
 
-function tunedPriceFnodes() {
+function tunedPriceFnodes(nodeToCssMap) {
 
-    // function hasDollarSign(fnode){
-    //   if(fnode.element.childNodes[0] && fnode.element.childNodes[0].nodeValue && fnode.element.childNodes[0].nodeValue.includes('$')){
-    //     return 2;
-    //   }
-    //   return 1;
-    // }
-    //
-    // function tagHasGoodCss(fnode){
-    //   if(fnode.element.id.match(/price/i) || fnode.element.classList.contains(/price/i)){
-    //     return 2;
-    //   }
-    //   return 1;
-    // }
-    //
-    // function notSavingsAmount(fnode){
-    //   if(fnode.element.childNodes[0] && fnode.element.childNodes[0].nodeValue &&
-    //     (fnode.element.childNodes[0].nodeValue.includes('-') || window.getComputedStyle(fnode.element).getPropertyValue('text-decoration') === 'line-through')){
-    //     return 0;
-    //   }
-    //   return 1;
-    // }
-    //
-    //
-    // const rules = ruleset(
-    //   //get all elements that could contain the price
-    //   rule(dom('span, div, li'), type('priceish')),
-    //
-    //   //bonus if direct text (not children) contains a dollar sign
-    //   rule(type('priceish'), score(hasDollarSign)),
-    //
-    //   //look for good css within tag
-    //   rule(type('priceish'), score(tagHasGoodCss)),
-    //
-    //   //not to be confused with amount off (minus sign, crossed off)
-    //   rule(type('priceish'), score(notSavingsAmount)),
-    //
-    //   //return image with max score
-    //   rule(type('priceish').max(), out('product-price'))
-    //
-    // );
-    //
-    // function tuningRoutine(doc) {
-    //     return rules.against(doc).get('product-price');
-    // }
-    //
-    // return tuningRoutine;
+    function hasDollarSign(fnode){
+      if(fnode.element.childNodes[0] && fnode.element.childNodes[0].nodeValue && fnode.element.childNodes[0].nodeValue.includes('$')){
+        return 2;
+      }
+      return 1;
+    }
+
+    function tagHasGoodCss(fnode){
+      if(fnode.element.id.match(/(price|sale|deal)/i) || fnode.element.classList.contains(/(price|sale|deal)/i) || fnode.element.itemprop && fnode.element.itemprop.match(/price/i) ||
+          fnode.element.classList[0] && fnode.element.classList[0].match(/(price|sale|deal)/i)){
+        return 2;
+      }
+      return 1;
+    }
+
+    function notSavingsAmount(fnode){
+      const css = nodeToCssMap.get(fnode.element);
+      if(css.strikethrough === 'line-through'){
+        return 0;
+      }
+      return 1;
+    }
+
+    const rules = ruleset(
+      //get all elements that could contain the price
+      rule(dom('span, div, li, strong, p, em'), type('priceish')),
+
+      //bonus if direct text (not children) contains a dollar sign
+      rule(type('priceish'), score(hasDollarSign)),
+
+      //look for good css within tag
+      rule(type('priceish'), score(tagHasGoodCss)),
+
+      //not to be confused with amount off (minus sign, crossed off)
+      rule(type('priceish'), score(notSavingsAmount)),
+
+      //return image with max score
+      rule(type('priceish').max(), out('product-price'))
+
+    );
+
+    function tuningRoutine(doc) {
+        return rules.against(doc).get('product-price');
+    }
+
+    return tuningRoutine;
 }
 
 /**
@@ -222,21 +172,30 @@ class DiffStats {
         this.tuningRoutine = tuningRoutine || tuningRoutines[feature];
     }
 
-    compare(expectedDom, sourceDom, dict) {
+    compare(expectedDom, sourceDom, nodeToCssMap) {
         let expectedText;
         let gotText;
         if (this.feature === 'image') {
           //compare images by src
+
+          // console.log(expectedDom.body.firstChild.outerHTML);
+          // expectedText = expectedDom.body.firstChild.outerHTML;
+          // gotText = this.tuningRoutine(nodeToCssMap)(sourceDom).map(fnode => fnode.element.outerHTML)[0];
           expectedText = expectedDom.body.firstChild.src;
-          gotText = this.tuningRoutine()(sourceDom).map(fnode => fnode.element.src)[0];
+          gotText = this.tuningRoutine(nodeToCssMap)(sourceDom).map(fnode => fnode.element.src)[0];
         } else if (this.feature === 'title') {
           //compare innerHTML text of titles
           expectedText = expectedDom.head.firstChild.innerHTML;
-          gotText = this.tuningRoutine(dict)(sourceDom).map(fnode => fnode.element.innerHTML)[0];
+          gotText = this.tuningRoutine(nodeToCssMap)(sourceDom).map(fnode => fnode.element.innerHTML)[0];
         } else if (this.feature === 'price') {
           //strip whitespace and dollar sign if there is one when comparing price
+
+          // console.log(expectedDom.body.firstChild.outerHTML);
+          // expectedText = expectedDom.body.firstChild.outerHTML;
+          // gotText = this.tuningRoutine(nodeToCssMap)(sourceDom).map(fnode => fnode.element.outerHTML)[0];
           expectedText = expectedDom.body.firstChild.textContent.replace('$', '').trim();
-          gotText = this.tuningRoutine()(sourceDom).map(fnode => fnode.element.textContent.replace('$', '').trim())[0];
+          gotText = this.tuningRoutine(nodeToCssMap)(sourceDom).map(fnode => fnode.element.textContent.replace('$', '').trim())[0];
+
         }
 
         this.numTests++;
@@ -245,7 +204,7 @@ class DiffStats {
         }
 
         // Uncomment for debugging:
-        console.log(leven(expectedText, gotText), expectedText.length, leven(expectedText, gotText)/expectedText.length);
+        //console.log(leven(expectedText, gotText), expectedText.length, leven(expectedText, gotText)/expectedText.length);
         console.log('Got:\n' + gotText);
         console.log('\nExpected:\n' + expectedText);
     }
@@ -263,19 +222,24 @@ function createDict(item, sourceDom){
   let nodesMap = new Map();
   const numberToCss = JSON.parse(readFileSync(join(dirname(__dirname), 'fathom-products', 'product_classification_test_data', item, 'nodes.txt'), 'utf-8'));
   const elems = sourceDom.getElementsByTagName('*');
-  console.log(sourceDom.getElementsByTagName('*').length, Object.keys(numberToCss).length);
 
   //Match each node from the sourceDom to its css, and store in the global dict
   for(let i = 0; i < elems.length; i++){
     nodesMap.set(elems[i], numberToCss[i]);
   }
-  console.log(nodesMap.size);
+
+  //check that #nodes in sourceDom match #elements in number->css dictionary
+  if(sourceDom.getElementsByTagName('*').length !== nodesMap.size){
+    throw 'number of nodes do not match number of elements in css dictionary';
+  }
   return nodesMap;
 }
 
 /*
  * Calculate overall score for one feature
- * Args: folders - list of all test folders; feature - title/image/price; coeffs - tuning coeffs if any
+ * @param {object} folders array of all test folders
+ * @param {string} feature title/image/price
+ * @param {object} array of tuning coeffs if any
  */
 function deviationScore(folders, feature, coeffs = []) {
     const stats = new DiffStats(tuningRoutines[feature], feature);
@@ -284,23 +248,23 @@ function deviationScore(folders, feature, coeffs = []) {
     folders.forEach(function(store){
       if(['macys', 'swatch'].includes(store)){return;} // HACK: random jsdom script tag parsing errors, ignore for now
       const domFromFile = fileName => staticDom(readFileSync(join(dirname(__dirname), 'fathom-products', 'product_classification_test_data', store, fileName)));
-      const dict = createDict(store, domFromFile('source.html'));
-      const pair = [domFromFile('expected-' + feature + '.html'), domFromFile('source.html')];
-      stats.compare(pair[0], pair[1], dict);
+      const sourceDom = domFromFile('source.html');
+      const nodeToCssMap = createDict(store, sourceDom);
+      const pair = [domFromFile('expected-' + feature + '.html'), sourceDom];
+      stats.compare(pair[0], pair[1], nodeToCssMap);
       console.log(stats.score());
     });
 
-    // return stats.score();
+    return stats.score();
 }
 
 if (require.main === module) {
-    const folders_in = p => readdirSync(p).filter(f => statSync(p + "/" + f).isDirectory());
-    // const folders = folders_in(join(dirname(__dirname), 'fathom-products' , 'product_classification_test_data'));
-    const folders = ['amazon'];
+    const foldersIn = p => readdirSync(p).filter(f => statSync(p + "/" + f).isDirectory());
+    const folders = foldersIn(join(dirname(__dirname), 'fathom-products' , 'product_classification_test_data'));
 
     //For each feature, calculate score
     Object.keys(tuningRoutines).forEach(function(f){
-      deviationScore(folders, f);
-      //console.log('% difference from ideal:', deviationScore(folders, f));
+      // deviationScore(folders, f);
+      console.log('% difference from ideal:', deviationScore(folders, f));
     });
 }
