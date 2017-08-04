@@ -21,7 +21,7 @@ const {Annealer} = require('fathom-web/optimizers');
 const {staticDom} = require('fathom-web/utils');
 const tuningRoutines = {
                         'title' : {'routine': tunedTitleFnodes, 'coeffs': []},
-                        // 'price' : {'routine': tunedPriceFnodes, 'coeffs': [1, 1, 0.5]},
+                        'price' : {'routine': tunedPriceFnodes, 'coeffs':   [ 1.6, 1, 0.7, 0.7, 1.9000000000000001, 0.39999999999999997, 1, 1.3, 0.7, 1.3, 1.3, 1.3, 0.09999999999999998, 1, 0.39999999999999997, 0.39999999999999997, 0.7, 1.9000000000000001, 7.3 ]},
                         'image' : {'routine': tunedImageFnodes, 'coeffs': [1.9, 3.0, 4.2, 0.5, 0.1, 0.8, 1.3, 0.7, 0.4, 1, 0.1, 0.1, 1.3]}
                         };
 const VIEWPORT_HEIGHT = 960;
@@ -197,43 +197,241 @@ function tunedTitleFnodes(nodeToCssMap) {
     return tuningRoutine;
 }
 
-function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1, coeffCSS = 1, coeffSavings = 0.5) {
+
+function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSign = 1, coeffHasNumbers = 0.7,
+  coeffSpanBonus = 0.7, coeffSemanticTags = 1.9000000000000001, coeffCurrentPrice = 0.39999999999999997, coeffItemprop = 1, coeffKeywords = 1.3,
+  coeffStrike = 0.7, coeffNotSavings = 1.3, coeffAboveFold = 1.3, coeffCenterRight = 1.3, coeffMiddleHeight = 0.09999999999999998,
+  coeffBolded = 1, coeffNumNumbers = 0.39999999999999997, coeffNumDollarSigns = 0.39999999999999997, coeffPriceFormat = 0.7, coeffNumDots = 1.9000000000000001, coeffMetaTag = 7.3) {
 
     function hasDollarSign(fnode){
-      if(fnode.element.childNodes[0] && fnode.element.childNodes[0].nodeValue && fnode.element.childNodes[0].nodeValue.includes('$')){
+      if(fnode.element.textContent.includes('$')){
         return 2 * coeffDollarSign;
       }
       return 1;
     }
 
+    function nearDollarSign(fnode){
+      if(fnode.element.previousSibling && fnode.element.previousSibling.textContent.includes('$')){
+        return 3 * coeffNearDollarSign;
+      }
+      return 1;
+    }
+
+    function hasNumbers(fnode){
+      const regex = new RegExp(".*[0-9].*");
+      if(fnode.element.textContent.match(regex)){
+        return 10 * coeffHasNumbers;
+      }
+      return 1;
+    }
+
+
+    function spanBonus(fnode){
+      if(fnode.element.tagName === 'SPAN'){
+        return 2 * coeffSpanBonus;
+      }
+      return 1;
+    }
+
+    function semanticTags(fnode){
+      if(fnode.element.getElementsByTagName('SUP').length > 0 || fnode.element.getElementsByTagName('STRONG') > 0){
+        return 2 * coeffSemanticTags;
+      }
+      return 1;
+    }
+
+    function priceIsCurrent(fnode){
+      if(fnode.element.id.match(/(current|now)/i)){
+        return 2 * coeffCurrentPrice;
+      }
+
+      for(let i = 0; i < fnode.element.classList.length; i++){
+        if(fnode.element.classList[i].match(/(current|now)/i)){
+          return 2 * coeffCurrentPrice;
+        }
+      }
+      return 1;
+    }
+
+    function itemprop(fnode){
+      if(fnode.element.hasAttribute('itemprop') && fnode.element.getAttribute('itemprop').match(/price/i)){
+        return 100 * coeffItemprop;
+      }
+      return 1;
+    }
+
+
     function tagHasGoodCss(fnode){
-      if(fnode.element.id.match(/(price|sale|deal)/i) || fnode.element.classList.contains(/(price|sale|deal)/i) || fnode.element.itemprop && fnode.element.itemprop.match(/price/i) ||
-          fnode.element.classList[0] && fnode.element.classList[0].match(/(price|sale|deal)/i)){
-        return 2 * coeffCSS;
+      if(fnode.element.id.match(/(price|sale|deal|total)/i)){
+        return 2 * coeffKeywords;
+      }
+
+      for(let i = 0; i < fnode.element.classList.length; i++){
+        if(fnode.element.classList[i].match(/(price|sale|deal|total)/i)){
+          return 2 * coeffKeywords;
+        }
+      }
+      return 1;
+    }
+
+    function notSrikedOut(fnode){
+      const css = nodeToCssMap.get(fnode.element);
+      if(css.strikethrough === 'line-through'){
+        return coeffStrike;
       }
       return 1;
     }
 
     function notSavingsAmount(fnode){
+      const range_regex = "(.*[0-9].*)-(.*[0-9].*)";
+      if(fnode.element.textContent.includes('-') && !fnode.element.textContent.match(range_regex)){
+        return 0.5 * coeffNotSavings;
+      }
+      return 1;
+    }
+
+    function aboveTheFold(fnode){
       const css = nodeToCssMap.get(fnode.element);
-      if(css.strikethrough === 'line-through'){
-        return coeffSavings;
+      if(css.top < VIEWPORT_HEIGHT){
+        return 1;
+      }
+      return 0.5 * coeffAboveFold;
+    }
+
+    function centerRightOfPage(fnode){
+      const css = nodeToCssMap.get(fnode.element);
+      //somewhat arbitrary choices, could put it through the optimizer later
+      if(css.left > VIEWPORT_WIDTH/3 && css.left < VIEWPORT_WIDTH * 3/4){
+        return 1;
+      }
+      return 0.5 * coeffCenterRight;
+    }
+
+    function middleHeight(fnode){
+      const css = nodeToCssMap.get(fnode.element);
+      //somewhat arbitrary choices, could put it through the optimizer later
+      if(css.top > VIEWPORT_HEIGHT/6 && css.top < VIEWPORT_HEIGHT * 3/4){
+        return 1;
+      }
+      return 0.5 * coeffMiddleHeight;
+    }
+
+    function bolded(fnode){
+      if(fnode.element.id.match(/(bold)/i)){
+        return 2 * coeffBolded;
+      }
+
+      for(let i = 0; i < fnode.element.classList.length; i++){
+        if(fnode.element.classList[i].match(/(bold)/i)){
+          return 2 * coeffBolded;
+        }
+      }
+      return 1;
+    }
+
+    function numberOfNumbers(fnode){
+      //one price often ~4 or <= 4 numbers
+      if(fnode.element.textContent.match(/[0-9]/g) && fnode.element.textContent.match(/[0-9]/g).length <= 4){
+        return 4 * coeffNumNumbers;
+      }
+      //two prices in a range often <= 8 numbers
+      if(fnode.element.textContent.match(/[0-9]/g) && fnode.element.textContent.match(/[0-9]/g).length <= 8){
+        return 2 * coeffNumNumbers;
+      }
+      return 0.5 * coeffNumNumbers;
+    }
+
+    function numberOfDollarSigns(fnode){
+      if(fnode.element.textContent.match(/[\$]/g) && fnode.element.textContent.match(/[\$]/g).length > 2){
+        return 0.5 * coeffNumDollarSigns;
+      }
+      return 1;
+    }
+
+    function priceFormat(fnode){
+      if(fnode.element.textContent.match(/(.*[0-9].*)-(.*[0-9].*)/) ||
+         fnode.element.textContent.match(/[\$][\\d]+[\\.][0-9][0-9]/) ||
+         fnode.element.textContent.match(/\$[\\d]+/)){
+           return 2 * coeffPriceFormat;
+         }
+      return 1;
+    }
+
+    function numberOfDots(fnode){
+      if(fnode.element.textContent.match(/\./g) && fnode.element.textContent.match(/\./g).length >= 2 && !fnode.element.textContent.includes('-')){
+        return 0.5 * coeffNumDots;
+      }
+      return 1;
+    }
+
+    function metaTags(fnode){
+      if(fnode.element.tagName === 'META' && fnode.element.hasAttribute('itemprop') && fnode.element.getAttribute('itemprop').match(/price/i) &&
+         !fnode.element.getAttribute('itemprop').match(/currency/i)){
+        return 100 * coeffMetaTag;
       }
       return 1;
     }
 
     const rules = ruleset(
       //get all elements that could contain the price
-      rule(dom('span, div, li, strong, p, em'), type('priceish')),
+      rule(dom('span, div, li, strong, p, em, h1, h2, h3, h4, h5, h6, meta'), type('priceish')),
 
-      //bonus if direct text (not children) contains a dollar sign
+      //check if text has dollar sign
       rule(type('priceish'), score(hasDollarSign)),
 
-      //look for good css within tag
+      //check if previous sibling has a dollar sign
+      rule(type('priceish'), score(nearDollarSign)),
+
+      //text has numbers
+      rule(type('priceish'), score(hasNumbers)),
+
+      //bonus for span tags, common for prices
+      rule(type('priceish'), score(spanBonus)),
+
+      //check for semantic tags like sup and strong
+      rule(type('priceish'), score(semanticTags)),
+
+      //check for keywords indicating the price is the current price
+      rule(type('priceish'), score(priceIsCurrent)),
+
+      //check if the itemprop attibute has price keywords
+      rule(type('priceish'), score(itemprop)),
+
+      //other price keywords in id, class, etc
       rule(type('priceish'), score(tagHasGoodCss)),
 
-      //not to be confused with amount off (minus sign, crossed off)
+      //price is not striked out
+      rule(type('priceish'), score(notSrikedOut)),
+
+      //check for a minus sign that is not part of a price range
       rule(type('priceish'), score(notSavingsAmount)),
+
+      //visible on the page
+      rule(type('priceish'), score(aboveTheFold)),
+
+      //static bonus if within some x-axis range
+      rule(type('priceish'), score(centerRightOfPage)),
+
+      //static bonus if within some y-axis range
+      rule(type('priceish'), score(middleHeight)),
+
+      //class/style keywords indicating its bolded
+      rule(type('priceish'), score(bolded)),
+
+      //number of numbers
+      rule(type('priceish'), score(numberOfNumbers)),
+
+      //number of dollar signs
+      rule(type('priceish'), score(numberOfDollarSigns)),
+
+      //number of decimal points
+      rule(type('priceish'), score(numberOfDots)),
+
+      //if in one of three formats: price range, price with decimal (2 numbers after decimal), price without decimal
+      rule(type('priceish'), score(priceFormat)),
+
+      //check meta tags with itemprop = price
+      rule(type('priceish'), score(metaTags)),
 
       //return image with max score
       rule(type('priceish').max(), out('product-price'))
@@ -282,25 +480,37 @@ class DiffStats {
           expectedText = expectedDom.head.firstChild.innerHTML;
           gotText = this.tuningRoutine(nodeToCssMap, ...coeffs)(sourceDom).map(fnode => fnode.element.innerHTML)[0];
         } else if (this.feature === 'price') {
-          //strip whitespace and dollar sign if there is one when comparing price
+          //strip whitespace, dollar sign, trailing zeros if when comparing price
 
-          // console.log(expectedDom.body.firstChild.outerHTML);
           // expectedText = expectedDom.body.firstChild.outerHTML;
           // gotText = this.tuningRoutine(nodeToCssMap)(sourceDom).map(fnode => fnode.element.outerHTML)[0];
-          expectedText = expectedDom.body.firstChild.textContent.replace('$', '').trim();
-          gotText = this.tuningRoutine(nodeToCssMap, ...coeffs)(sourceDom).map(fnode => fnode.element.textContent.replace('$', '').trim())[0];
+
+          expectedText = expectedDom.body.firstChild.textContent.trim().replace('$', '').replace(/\s/g,'').replace(/[^0-9$.-]/g, '').replace(/(\.[0-9]*?)0+$/, '');
+          gotText = this.tuningRoutine(nodeToCssMap, ...coeffs)(sourceDom).map(fnode => fnode.element)[0];
+
+          if(gotText.tagName !== 'META'){
+              gotText = gotText.textContent.trim().replace('$', '').replace(/\s/g,'').replace(/[^0-9$.-]/g, '').replace(/(\.[0-9]*?)0+$/, '');
+          } else {
+              gotText = gotText.getAttribute('content').replace(/\s/g,'').replace(/[^0-9$.-]/g, '').replace(/(\.[0-9]*?)0+$/, '');
+          }
+
+          if(gotText.includes('$')){
+            gotText = gotText.substr(gotText.indexOf('$') + 1);
+          }
+          if(expectedText.includes('$')){
+            expectedText = expectedText.substr(expectedText.indexOf('$') + 1);
+          }
 
         }
-
         this.numTests++;
         if(expectedText !== gotText) {
           this.deviation++;
         }
 
         // Uncomment for debugging:
-        // console.log('Got:\n' + gotText);
-        // console.log('\nExpected:\n' + expectedText);
-        // console.log(this.deviation, this.numTests, expectedText === gotText);
+        console.log('Got:\n' + gotText);
+        console.log('\nExpected:\n' + expectedText);
+        console.log(this.deviation, this.numTests, expectedText === gotText);
     }
 
     score() {
@@ -336,13 +546,16 @@ function createDict(item, sourceDom){
  * @param {object} array of tuning coeffs if any
  */
 function deviationScore(dataMap, folders, feature, coeffs = []) {
+    // console.log(coeffs);
     const stats = new DiffStats(tuningRoutines[feature].routine, feature);
-
     //For each test file, create the object-> css map, and run the comparison function
     folders.forEach(function(store){
-      // console.log(store);
-      stats.compare(dataMap[store][feature], dataMap[store].sourceDom, dataMap[store].nodeToCssMap, coeffs);
-      // console.log(stats.score());
+      if(store === 'hayneedle'){
+        //don't do anything
+      } else {
+        // console.log(store);
+        stats.compare(dataMap[store][feature], dataMap[store].sourceDom, dataMap[store].nodeToCssMap, coeffs);
+      }
     });
     console.log(stats.score());
     return stats.score();
