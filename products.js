@@ -66,7 +66,6 @@ function tunedImageFnodes(nodeToCssMap, coeffImgSize = 1.9, coeffImgHasSrc = 3.0
       }
     }
 
-
     function keywords(fnode) {
       if (fnode.element.hasAttribute('src') && fnode.element.src.match(/(thumb|logo|icon)/i)){
         return coeffBadKeywords;
@@ -265,12 +264,13 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 4.4, coeffNearDollarSi
     }
 
     function tagHasGoodCss(fnode){
-      if (fnode.element.id.match(/(price|sale|deal|total)/i)){
+      const regex = new RegExp(/(price|sale|deal|total)/, 'i');
+      if (fnode.element.id.match(regex)){
         return coeffKeywords;
       }
 
       for (let i = 0; i < fnode.element.classList.length; i++){
-        if (fnode.element.classList[i].match(/(price|sale|deal|total)/i)){
+        if (fnode.element.classList[i].match(regex)){
           return coeffKeywords;
         }
       }
