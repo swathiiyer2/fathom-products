@@ -25,6 +25,13 @@ const tuningRoutines = {
 const VIEWPORT_HEIGHT = 960;
 const VIEWPORT_WIDTH = 1680;
 
+function withoutQueryParams(url){
+  if (url.includes('?')){
+    url = url.substr(0,url.indexOf('?'));
+  }
+  return url;
+}
+
 function tunedImageFnodes(nodeToCssMap, coeffImgSize = 1.9, coeffImgHasSrc = 3.0, coeffImgTitle = 420.0,
   coeffItemprop = 500.0, coeffBadKeywords = 0.05, coeffGoodKeywords = 800.0, coeffClassKeywords = 1300.0,
   coeffTitleWords = 0.7, coeffAboveTheFold = 0.2, coeffLeftOfPage = 0.5, coeffSVGs = 0.1, coeffDataURLs = 0.1, titleWordsBase = 1.3) {
@@ -458,16 +465,9 @@ class DiffStats {
         let gotText;
         if (this.feature === 'image') {
           //compare images by src, strip query params
+          expectedText = withoutQueryParams(expectedDom.body.firstChild.src);
+          gotText = withoutQueryParams(this.tuningRoutine(nodeToCssMap, ...coeffs)(sourceDom).map(fnode => fnode.element.src)[0]);
           
-          expectedText = expectedDom.body.firstChild.src;
-          gotText = this.tuningRoutine(nodeToCssMap, ...coeffs)(sourceDom).map(fnode => fnode.element.src)[0];
-          if (expectedText.includes('?')){
-            expectedText = expectedText.substr(0,expectedText.indexOf('?'));
-          }
-          if (gotText.includes('?')){
-            gotText = gotText.substr(0,gotText.indexOf('?'));
-          }
-
         } else if (this.feature === 'title') {
           //compare innerHTML text of titles
           expectedText = expectedDom.head.firstChild.innerHTML;
