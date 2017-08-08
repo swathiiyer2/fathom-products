@@ -18,13 +18,27 @@ const {dom, props, out, rule, ruleset, score, type} = require('fathom-web');
 const {Annealer} = require('fathom-web/optimizers');
 const {staticDom} = require('fathom-web/utils');
 const tuningRoutines = {
-                        // 'title' : {'routine': tunedTitleFnodes, 'coeffs': []},
+                        'title' : {'routine': tunedTitleFnodes, 'coeffs': []},
                         'price' : {'routine': tunedPriceFnodes, 'coeffs':  [ 4.4, 3, 100, 2, 5, 2.6, 160, 2.6, 0.4, 0.2, 0.5, 0.2, 0.5, 4.4, 1.6, 0.8, 0.2, 0.05, 2.6, 0.65, 440]},
-                        // 'image' : {'routine': tunedImageFnodes, 'coeffs': [1.9, 3.0, 420.0, 500.0, 0.05, 800.0, 1300.0, 0.7, 0.2, 0.5, 0.1, 0.1, 1.3]}
+                        'image' : {'routine': tunedImageFnodes, 'coeffs': [1.9, 3.0, 420.0, 500.0, 0.05, 800.0, 1300.0, 0.7, 0.2, 0.5, 0.1, 0.1, 1.3]}
                         };
-const VIEWPORT_HEIGHT = 960;
 const VIEWPORT_WIDTH = 1680;
+const VIEWPORT_HEIGHT = 960;
 
+/*
+ * Remove dollar sign, strip whitespace, strip words (anything not numeric or a price symbol), and remove trailing zeros
+ */
+function formatPrice(priceString){
+  priceString = priceString.replace('$', '').replace(/([\s]|[^0-9$.-])/g, '').replace(/(\.[0-9]*?)0+$/, '');
+  if (priceString.includes('$')){
+    priceString = priceString.substr(priceString.indexOf('$') + 1);
+  }
+  return priceString;
+}
+
+/*
+ * Remove the query params from a url by getting the text that comes before a '?'
+ */
 function withoutQueryParams(url){
   if (url.includes('?')){
     url = url.substr(0,url.indexOf('?'));
@@ -32,6 +46,9 @@ function withoutQueryParams(url){
   return url;
 }
 
+/*
+ * Ruleset for product images
+ */
 function tunedImageFnodes(nodeToCssMap, coeffImgSize = 1.9, coeffImgHasSrc = 3.0, coeffImgTitle = 420.0,
   coeffItemprop = 500.0, coeffBadKeywords = 0.05, coeffGoodKeywords = 800.0, coeffClassKeywords = 1300.0,
   coeffTitleWords = 0.7, coeffAboveTheFold = 0.2, coeffLeftOfPage = 0.5, coeffSVGs = 0.1, coeffDataURLs = 0.1, titleWordsBase = 1.3) {
@@ -183,6 +200,9 @@ function tunedImageFnodes(nodeToCssMap, coeffImgSize = 1.9, coeffImgHasSrc = 3.0
     return tuningRoutine;
 }
 
+/*
+ * Ruleset for product titles
+ */
 function tunedTitleFnodes(nodeToCssMap) {
 
     const rules = ruleset(
@@ -201,6 +221,9 @@ function tunedTitleFnodes(nodeToCssMap) {
     return tuningRoutine;
 }
 
+/*
+ * Ruleset for product prices
+ */
 function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 4.4, coeffNearDollarSign = 3, coeffHasNumbers = 100,
   coeffSpanBonus = 2, coeffSemanticTags = 5, coeffCurrentPrice = 2.6, coeffItemprop = 160, coeffKeywords = 2.6,
   coeffStrike = 0.4, coeffNotSavings = 0.2, coeffAboveFold = 0.5, coeffCenterRight = 0.2, coeffMiddleHeight = 0.5,
@@ -448,9 +471,8 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 4.4, coeffNearDollarSi
     return tuningRoutine;
 }
 
-/**
- * Maintain state as we compare a series of DOMs, reporting the percent
- * difference at the end.
+/*
+ * Maintain state as we compare a series of DOMs, reporting the percent difference at the end.
  */
 class DiffStats {
     constructor(tuningRoutine, feature) {
@@ -472,24 +494,12 @@ class DiffStats {
           //compare innerHTML text of titles
           expectedText = expectedDom.head.firstChild.innerHTML;
           gotText = this.tuningRoutine(nodeToCssMap, ...coeffs)(sourceDom).map(fnode => fnode.element.innerHTML)[0];
+
         } else if (this.feature === 'price') {
-          //strip whitespace, dollar sign, trailing zeros if when comparing price
-
-          expectedText = expectedDom.body.firstChild.textContent.trim().replace('$', '').replace(/\s/g,'').replace(/[^0-9$.-]/g, '').replace(/(\.[0-9]*?)0+$/, '');
+          //strip whitespace, dollar sign, words, and trailing zeros when comparing price
+          expectedText = formatPrice(expectedDom.body.firstChild.textContent);
           gotText = this.tuningRoutine(nodeToCssMap, ...coeffs)(sourceDom).map(fnode => fnode.element)[0];
-
-          if (gotText.tagName !== 'META'){
-              gotText = gotText.textContent.trim().replace('$', '').replace(/\s/g,'').replace(/[^0-9$.-]/g, '').replace(/(\.[0-9]*?)0+$/, '');
-          } else {
-              gotText = gotText.getAttribute('content').replace(/\s/g,'').replace(/[^0-9$.-]/g, '').replace(/(\.[0-9]*?)0+$/, '');
-          }
-
-          if (gotText.includes('$')){
-            gotText = gotText.substr(gotText.indexOf('$') + 1);
-          }
-          if (expectedText.includes('$')){
-            expectedText = expectedText.substr(expectedText.indexOf('$') + 1);
-          }
+          gotText = (gotText.tagName !== 'META')? formatPrice(gotText.textContent) : formatPrice(gotText.getAttribute('content'));
 
         }
         this.numTests++;
@@ -511,7 +521,6 @@ class DiffStats {
 /*
  * Reads/parses the node#->css dictionary collected by selenium, and creates a new map from HTMLObj -> CSS
  */
-
 function createDict(item, sourceDom){
   let nodesMap = new Map();
   const numberToCss = JSON.parse(readFileSync(join(dirname(__dirname), 'fathom-products', 'product_classification_test_data', item, 'nodes.txt'), 'utf-8'));
