@@ -458,10 +458,7 @@ class DiffStats {
         let gotText;
         if (this.feature === 'image') {
           //compare images by src, strip query params
-
-          //console.log(expectedDom.body.firstChild.outerHTML);
-          // expectedText = expectedDom.body.firstChild.outerHTML;
-          // gotText = this.tuningRoutine(nodeToCssMap)(sourceDom).map(fnode => fnode.element.outerHTML)[0];
+          
           expectedText = expectedDom.body.firstChild.src;
           gotText = this.tuningRoutine(nodeToCssMap, ...coeffs)(sourceDom).map(fnode => fnode.element.src)[0];
           if (expectedText.includes('?')){
@@ -477,9 +474,6 @@ class DiffStats {
           gotText = this.tuningRoutine(nodeToCssMap, ...coeffs)(sourceDom).map(fnode => fnode.element.innerHTML)[0];
         } else if (this.feature === 'price') {
           //strip whitespace, dollar sign, trailing zeros if when comparing price
-
-          // expectedText = expectedDom.body.firstChild.outerHTML;
-          // gotText = this.tuningRoutine(nodeToCssMap)(sourceDom).map(fnode => fnode.element.outerHTML)[0];
 
           expectedText = expectedDom.body.firstChild.textContent.trim().replace('$', '').replace(/\s/g,'').replace(/[^0-9$.-]/g, '').replace(/(\.[0-9]*?)0+$/, '');
           gotText = this.tuningRoutine(nodeToCssMap, ...coeffs)(sourceDom).map(fnode => fnode.element)[0];
@@ -542,16 +536,10 @@ function createDict(item, sourceDom){
  * @param {object} array of tuning coeffs if any
  */
 function deviationScore(dataMap, folders, feature, coeffs = []) {
-    // console.log(coeffs);
     const stats = new DiffStats(tuningRoutines[feature].routine, feature);
     //For each test file, create the object-> css map, and run the comparison function
     folders.forEach(function(store){
-      if (store === 'hayneedle'){
-        //don't do anything
-      } else {
-        // console.log(store);
         stats.compare(dataMap[store][feature], dataMap[store].sourceDom, dataMap[store].nodeToCssMap, coeffs);
-      }
     });
     console.log(stats.score());
     return stats.score();
@@ -593,7 +581,7 @@ if (require.main === module) {
             return tuningRoutines[this.feature].coeffs;
         }
 
-        /** Nudge a random coefficient in a random direction by 0.5. */
+        /** Nudge a random coefficient in a random direction by 0.3. */
         randomTransition(coeffs) {
             const ret = coeffs.slice();  // Make a copy.
             ret[Math.floor(Math.random() * coeffs.length)] += Math.floor(Math.random() * 2) ? -.3 : .3;
