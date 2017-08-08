@@ -1,11 +1,9 @@
-/**
+/*
  * Using fathom to extract a product from its product page,
  * where a 'product' is defined by the bundle of features that
  * makes it identifiable.
  *
- * Features:
- *    In Progress - Title, Image, Price
-*     Future - Reviews, Product ID?
+ * Features: Title, Image, Price
  *
  * Testing:
  *    50 test products in product_classification_test_data folder
@@ -29,12 +27,12 @@ const VIEWPORT_WIDTH = 1680;
 
 function tunedImageFnodes(nodeToCssMap, coeffImgSize = 2.5, coeffImgHasSrc = 2.5, coeffImgTitle = 3,
   coeffItemprop = 0.5, coeffBadKeywords = 1, coeffGoodKeywords = 0.5, coeffClassKeywords = 1,
-  coefftitlewords = 1, coeffAboveTheFold = 1, coeffLeftOfPage = 1, coeffSVGs = 1, coeffDataURLs = 1, titlewordsBase = 1.5) {
+  coeffTitleWords = 1, coeffAboveTheFold = 1, coeffLeftOfPage = 1, coeffSVGs = 1, coeffDataURLs = 1, titleWordsBase = 1.5) {
     let title = '';
 
     function imageSize(fnode) {
       const css = nodeToCssMap.get(fnode.element);
-      if((css.left - css.right) * (css.top - css.bottom) === 0){
+      if ((css.left - css.right) * (css.top - css.bottom) === 0){
         return 1;
       }
       return (css.left - css.right) * (css.top - css.bottom) * coeffImgSize;
@@ -46,8 +44,8 @@ function tunedImageFnodes(nodeToCssMap, coeffImgSize = 2.5, coeffImgHasSrc = 2.5
 
     function imageTitle(fnode) {
       const attrs = ['title', 'alt'];
-      for(let i = 0; i < attrs.length; i++){
-        if(fnode.element.getAttribute(attrs[i]) &&
+      for (let i = 0; i < attrs.length; i++){
+        if (fnode.element.getAttribute(attrs[i]) &&
             (fnode.element.getAttribute(attrs[i]).includes(title) || title.includes(fnode.element.getAttribute(attrs[i])))){
               return 100 * coeffImgTitle;
             }
@@ -56,26 +54,26 @@ function tunedImageFnodes(nodeToCssMap, coeffImgSize = 2.5, coeffImgHasSrc = 2.5
     }
 
     function itemprop(fnode){
-      if(fnode.element.hasAttribute('itemprop') && fnode.element.getAttribute('itemprop').match(/(image|main|product|hero|feature)/i)){
+      if (fnode.element.hasAttribute('itemprop') && fnode.element.getAttribute('itemprop').match(/(image|main|product|hero|feature)/i)){
         return 1000 * coeffItemprop;
       }
     }
 
 
     function keywords(fnode) {
-      if(fnode.element.hasAttribute('src') && fnode.element.src.match(/(thumb|logo|icon)/i)){
+      if (fnode.element.hasAttribute('src') && fnode.element.src.match(/(thumb|logo|icon)/i)){
         return 0.5 * coeffBadKeywords;
       }
 
       const attrs = ['src', 'id', 'alt', 'title'];
-      for(let i = 0; i < attrs.length; i++){
-        if(fnode.element.hasAttribute(attrs[i]) && fnode.element.getAttribute(attrs[i]).match(/(main|product|hero|feature|primary)/i)){
+      for (let i = 0; i < attrs.length; i++){
+        if (fnode.element.hasAttribute(attrs[i]) && fnode.element.getAttribute(attrs[i]).match(/(main|product|hero|feature|primary)/i)){
           return 1000 * coeffGoodKeywords;
         }
       }
 
-      for(let i = 0; i < fnode.element.classList.length; i++){
-        if(fnode.element.classList[i].match(/(hero|main|product|primary|feature)/i)){
+      for (let i = 0; i < fnode.element.classList.length; i++){
+        if (fnode.element.classList[i].match(/(hero|main|product|primary|feature)/i)){
           return 1000 * coeffClassKeywords;
         }
       }
@@ -86,23 +84,23 @@ function tunedImageFnodes(nodeToCssMap, coeffImgSize = 2.5, coeffImgHasSrc = 2.5
       const titleWords = title.replace('|', '').split(' ');
       const attrs = ['src', 'title', 'alt'];
       let start = 1;
-      for(let j = 0; j < attrs.length; j++){
-        for(let i = 0; i < titleWords.length; i++){
-            if(titleWords[i].match(/^[a-z0-9]+$/i)){
+      for (let j = 0; j < attrs.length; j++){
+        for (let i = 0; i < titleWords.length; i++){
+            if (titleWords[i].match(/^[a-z0-9]+$/i)){
               const regex = new RegExp(titleWords[i], "i");
-              if(fnode.element.hasAttribute(attrs[j]) && fnode.element.getAttribute(attrs[j]).match(regex)){
+              if (fnode.element.hasAttribute(attrs[j]) && fnode.element.getAttribute(attrs[j]).match(regex)){
                 start+= fnode.element.getAttribute(attrs[j]).match(regex).length;
               }
           }
         }
       }
       //exaggerating the differences a little
-      return Math.pow(titlewordsBase, start) * coefftitlewords;
+      return Math.pow(titleWordsBase, start) * coeffTitleWords;
     }
 
     function aboveTheFold(fnode){
       const css = nodeToCssMap.get(fnode.element);
-      if(css.top < VIEWPORT_HEIGHT){
+      if (css.top < VIEWPORT_HEIGHT){
         return 1;
       }
       return 0.5 * coeffAboveTheFold;
@@ -110,14 +108,14 @@ function tunedImageFnodes(nodeToCssMap, coeffImgSize = 2.5, coeffImgHasSrc = 2.5
 
     function leftOfPage(fnode){
       const css = nodeToCssMap.get(fnode.element);
-      if(css.left < VIEWPORT_WIDTH/2){
+      if (css.left < VIEWPORT_WIDTH/2){
         return 1;
       }
       return 0.5 * coeffLeftOfPage;
     }
 
     function notSVGs(fnode){
-      if(fnode.element.hasAttribute('src') && fnode.element.getAttribute('src').includes('.svg')){
+      if (fnode.element.hasAttribute('src') && fnode.element.getAttribute('src').includes('.svg')){
         return 0;
       }
       return 1 * coeffSVGs;
@@ -204,14 +202,14 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
   coeffBolded = 1, coeffNumNumbers = 0.39999999999999997, coeffNumDollarSigns = 0.39999999999999997, coeffPriceFormat = 0.7, coeffNumDots = 1.9000000000000001, coeffMetaTag = 7.3) {
 
     function hasDollarSign(fnode){
-      if(fnode.element.textContent.includes('$')){
+      if (fnode.element.textContent.includes('$')){
         return 2 * coeffDollarSign;
       }
       return 1;
     }
 
     function nearDollarSign(fnode){
-      if(fnode.element.previousSibling && fnode.element.previousSibling.textContent.includes('$')){
+      if (fnode.element.previousSibling && fnode.element.previousSibling.textContent.includes('$')){
         return 3 * coeffNearDollarSign;
       }
       return 1;
@@ -219,7 +217,7 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
 
     function hasNumbers(fnode){
       const regex = new RegExp(".*[0-9].*");
-      if(fnode.element.textContent.match(regex)){
+      if (fnode.element.textContent.match(regex)){
         return 10 * coeffHasNumbers;
       }
       return 1;
@@ -227,26 +225,26 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
 
 
     function spanBonus(fnode){
-      if(fnode.element.tagName === 'SPAN'){
+      if (fnode.element.tagName === 'SPAN'){
         return 2 * coeffSpanBonus;
       }
       return 1;
     }
 
     function semanticTags(fnode){
-      if(fnode.element.getElementsByTagName('SUP').length > 0 || fnode.element.getElementsByTagName('STRONG') > 0){
+      if (fnode.element.getElementsByTagName('SUP').length > 0 || fnode.element.getElementsByTagName('STRONG') > 0){
         return 2 * coeffSemanticTags;
       }
       return 1;
     }
 
     function priceIsCurrent(fnode){
-      if(fnode.element.id.match(/(current|now)/i)){
+      if (fnode.element.id.match(/(current|now)/i)){
         return 2 * coeffCurrentPrice;
       }
 
-      for(let i = 0; i < fnode.element.classList.length; i++){
-        if(fnode.element.classList[i].match(/(current|now)/i)){
+      for (let i = 0; i < fnode.element.classList.length; i++){
+        if (fnode.element.classList[i].match(/(current|now)/i)){
           return 2 * coeffCurrentPrice;
         }
       }
@@ -254,7 +252,7 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
     }
 
     function itemprop(fnode){
-      if(fnode.element.hasAttribute('itemprop') && fnode.element.getAttribute('itemprop').match(/price/i)){
+      if (fnode.element.hasAttribute('itemprop') && fnode.element.getAttribute('itemprop').match(/price/i)){
         return 100 * coeffItemprop;
       }
       return 1;
@@ -262,12 +260,12 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
 
 
     function tagHasGoodCss(fnode){
-      if(fnode.element.id.match(/(price|sale|deal|total)/i)){
+      if (fnode.element.id.match(/(price|sale|deal|total)/i)){
         return 2 * coeffKeywords;
       }
 
-      for(let i = 0; i < fnode.element.classList.length; i++){
-        if(fnode.element.classList[i].match(/(price|sale|deal|total)/i)){
+      for (let i = 0; i < fnode.element.classList.length; i++){
+        if (fnode.element.classList[i].match(/(price|sale|deal|total)/i)){
           return 2 * coeffKeywords;
         }
       }
@@ -276,7 +274,7 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
 
     function notSrikedOut(fnode){
       const css = nodeToCssMap.get(fnode.element);
-      if(css.strikethrough === 'line-through'){
+      if (css.strikethrough === 'line-through'){
         return coeffStrike;
       }
       return 1;
@@ -284,7 +282,7 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
 
     function notSavingsAmount(fnode){
       const range_regex = "(.*[0-9].*)-(.*[0-9].*)";
-      if(fnode.element.textContent.includes('-') && !fnode.element.textContent.match(range_regex)){
+      if (fnode.element.textContent.includes('-') && !fnode.element.textContent.match(range_regex)){
         return 0.5 * coeffNotSavings;
       }
       return 1;
@@ -292,7 +290,7 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
 
     function aboveTheFold(fnode){
       const css = nodeToCssMap.get(fnode.element);
-      if(css.top < VIEWPORT_HEIGHT){
+      if (css.top < VIEWPORT_HEIGHT){
         return 1;
       }
       return 0.5 * coeffAboveFold;
@@ -301,7 +299,7 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
     function centerRightOfPage(fnode){
       const css = nodeToCssMap.get(fnode.element);
       //somewhat arbitrary choices, could put it through the optimizer later
-      if(css.left > VIEWPORT_WIDTH/3 && css.left < VIEWPORT_WIDTH * 3/4){
+      if (css.left > VIEWPORT_WIDTH/3 && css.left < VIEWPORT_WIDTH * 3/4){
         return 1;
       }
       return 0.5 * coeffCenterRight;
@@ -310,19 +308,19 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
     function middleHeight(fnode){
       const css = nodeToCssMap.get(fnode.element);
       //somewhat arbitrary choices, could put it through the optimizer later
-      if(css.top > VIEWPORT_HEIGHT/6 && css.top < VIEWPORT_HEIGHT * 3/4){
+      if (css.top > VIEWPORT_HEIGHT/6 && css.top < VIEWPORT_HEIGHT * 3/4){
         return 1;
       }
       return 0.5 * coeffMiddleHeight;
     }
 
     function bolded(fnode){
-      if(fnode.element.id.match(/(bold)/i)){
+      if (fnode.element.id.match(/(bold)/i)){
         return 2 * coeffBolded;
       }
 
-      for(let i = 0; i < fnode.element.classList.length; i++){
-        if(fnode.element.classList[i].match(/(bold)/i)){
+      for (let i = 0; i < fnode.element.classList.length; i++){
+        if (fnode.element.classList[i].match(/(bold)/i)){
           return 2 * coeffBolded;
         }
       }
@@ -331,25 +329,25 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
 
     function numberOfNumbers(fnode){
       //one price often ~4 or <= 4 numbers
-      if(fnode.element.textContent.match(/[0-9]/g) && fnode.element.textContent.match(/[0-9]/g).length <= 4){
+      if (fnode.element.textContent.match(/[0-9]/g) && fnode.element.textContent.match(/[0-9]/g).length <= 4){
         return 4 * coeffNumNumbers;
       }
       //two prices in a range often <= 8 numbers
-      if(fnode.element.textContent.match(/[0-9]/g) && fnode.element.textContent.match(/[0-9]/g).length <= 8){
+      if (fnode.element.textContent.match(/[0-9]/g) && fnode.element.textContent.match(/[0-9]/g).length <= 8){
         return 2 * coeffNumNumbers;
       }
       return 0.5 * coeffNumNumbers;
     }
 
     function numberOfDollarSigns(fnode){
-      if(fnode.element.textContent.match(/[\$]/g) && fnode.element.textContent.match(/[\$]/g).length > 2){
+      if (fnode.element.textContent.match(/[\$]/g) && fnode.element.textContent.match(/[\$]/g).length > 2){
         return 0.5 * coeffNumDollarSigns;
       }
       return 1;
     }
 
     function priceFormat(fnode){
-      if(fnode.element.textContent.match(/(.*[0-9].*)-(.*[0-9].*)/) ||
+      if (fnode.element.textContent.match(/(.*[0-9].*)-(.*[0-9].*)/) ||
          fnode.element.textContent.match(/[\$][\\d]+[\\.][0-9][0-9]/) ||
          fnode.element.textContent.match(/\$[\\d]+/)){
            return 2 * coeffPriceFormat;
@@ -358,14 +356,14 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
     }
 
     function numberOfDots(fnode){
-      if(fnode.element.textContent.match(/\./g) && fnode.element.textContent.match(/\./g).length >= 2 && !fnode.element.textContent.includes('-')){
+      if (fnode.element.textContent.match(/\./g) && fnode.element.textContent.match(/\./g).length >= 2 && !fnode.element.textContent.includes('-')){
         return 0.5 * coeffNumDots;
       }
       return 1;
     }
 
     function metaTags(fnode){
-      if(fnode.element.tagName === 'META' && fnode.element.hasAttribute('itemprop') && fnode.element.getAttribute('itemprop').match(/price/i) &&
+      if (fnode.element.tagName === 'META' && fnode.element.hasAttribute('itemprop') && fnode.element.getAttribute('itemprop').match(/price/i) &&
          !fnode.element.getAttribute('itemprop').match(/currency/i)){
         return 100 * coeffMetaTag;
       }
@@ -468,10 +466,10 @@ class DiffStats {
           // gotText = this.tuningRoutine(nodeToCssMap)(sourceDom).map(fnode => fnode.element.outerHTML)[0];
           expectedText = expectedDom.body.firstChild.src;
           gotText = this.tuningRoutine(nodeToCssMap, ...coeffs)(sourceDom).map(fnode => fnode.element.src)[0];
-          if(expectedText.includes('?')){
+          if (expectedText.includes('?')){
             expectedText = expectedText.substr(0,expectedText.indexOf('?'));
           }
-          if(gotText.includes('?')){
+          if (gotText.includes('?')){
             gotText = gotText.substr(0,gotText.indexOf('?'));
           }
 
@@ -488,22 +486,22 @@ class DiffStats {
           expectedText = expectedDom.body.firstChild.textContent.trim().replace('$', '').replace(/\s/g,'').replace(/[^0-9$.-]/g, '').replace(/(\.[0-9]*?)0+$/, '');
           gotText = this.tuningRoutine(nodeToCssMap, ...coeffs)(sourceDom).map(fnode => fnode.element)[0];
 
-          if(gotText.tagName !== 'META'){
+          if (gotText.tagName !== 'META'){
               gotText = gotText.textContent.trim().replace('$', '').replace(/\s/g,'').replace(/[^0-9$.-]/g, '').replace(/(\.[0-9]*?)0+$/, '');
           } else {
               gotText = gotText.getAttribute('content').replace(/\s/g,'').replace(/[^0-9$.-]/g, '').replace(/(\.[0-9]*?)0+$/, '');
           }
 
-          if(gotText.includes('$')){
+          if (gotText.includes('$')){
             gotText = gotText.substr(gotText.indexOf('$') + 1);
           }
-          if(expectedText.includes('$')){
+          if (expectedText.includes('$')){
             expectedText = expectedText.substr(expectedText.indexOf('$') + 1);
           }
 
         }
         this.numTests++;
-        if(expectedText !== gotText) {
+        if (expectedText !== gotText) {
           this.deviation++;
         }
 
@@ -528,12 +526,12 @@ function createDict(item, sourceDom){
   const elems = sourceDom.getElementsByTagName('*');
 
   //Match each node from the sourceDom to its css, and store in the global dict
-  for(let i = 0; i < elems.length; i++){
+  for (let i = 0; i < elems.length; i++){
     nodesMap.set(elems[i], numberToCss[i]);
   }
 
   //check that #nodes in sourceDom match #elements in number->css dictionary
-  if(sourceDom.getElementsByTagName('*').length !== nodesMap.size){
+  if (sourceDom.getElementsByTagName('*').length !== nodesMap.size){
     throw 'number of nodes do not match number of elements in css dictionary';
   }
   return nodesMap;
@@ -550,7 +548,7 @@ function deviationScore(dataMap, folders, feature, coeffs = []) {
     const stats = new DiffStats(tuningRoutines[feature].routine, feature);
     //For each test file, create the object-> css map, and run the comparison function
     folders.forEach(function(store){
-      if(store === 'hayneedle'){
+      if (store === 'hayneedle'){
         //don't do anything
       } else {
         // console.log(store);
