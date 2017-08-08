@@ -121,7 +121,7 @@ function tunedImageFnodes(nodeToCssMap, coeffImgSize = 1.9, coeffImgHasSrc = 3.0
       return coeffSVGs;
     }
 
-    function dataURLs(fnode){
+    function notDataURLs(fnode){
       const css = nodeToCssMap.get(fnode.element);
       if (fnode.element.hasAttribute('src') && fnode.element.getAttribute('src').includes('data:')){
         return 0;
@@ -162,7 +162,7 @@ function tunedImageFnodes(nodeToCssMap, coeffImgSize = 1.9, coeffImgHasSrc = 3.0
       rule(type('images'), score(notSVGs)),
 
       //image src likely will not be a data-url
-      rule(type('images'), score(dataURLs)),
+      rule(type('images'), score(notDataURLs)),
 
       //return image with max score
       rule(type('images').max(), out('product-image'))
