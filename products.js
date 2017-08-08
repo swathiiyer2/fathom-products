@@ -18,16 +18,16 @@ const {dom, props, out, rule, ruleset, score, type} = require('fathom-web');
 const {Annealer} = require('fathom-web/optimizers');
 const {staticDom} = require('fathom-web/utils');
 const tuningRoutines = {
-                        'title' : {'routine': tunedTitleFnodes, 'coeffs': []},
-                        'price' : {'routine': tunedPriceFnodes, 'coeffs':   [ 1.6, 1, 0.7, 0.7, 1.9000000000000001, 0.39999999999999997, 1, 1.3, 0.7, 1.3, 1.3, 1.3, 0.09999999999999998, 1, 0.39999999999999997, 0.39999999999999997, 0.7, 1.9000000000000001, 7.3 ]},
-                        'image' : {'routine': tunedImageFnodes, 'coeffs': [1.9, 3.0, 4.2, 0.5, 0.1, 0.8, 1.3, 0.7, 0.4, 1, 0.1, 0.1, 1.3]}
+                        // 'title' : {'routine': tunedTitleFnodes, 'coeffs': []},
+                        'price' : {'routine': tunedPriceFnodes, 'coeffs':  [ 4.4, 3, 100, 2, 5, 2.6, 160, 2.6, 0.4, 0.2, 0.5, 0.2, 0.5, 4.4, 1.6, 0.8, 0.2, 0.05, 2.6, 0.65, 440]},
+                        // 'image' : {'routine': tunedImageFnodes, 'coeffs': [1.9, 3.0, 420.0, 500.0, 0.05, 800.0, 1300.0, 0.7, 0.2, 0.5, 0.1, 0.1, 1.3]}
                         };
 const VIEWPORT_HEIGHT = 960;
 const VIEWPORT_WIDTH = 1680;
 
-function tunedImageFnodes(nodeToCssMap, coeffImgSize = 2.5, coeffImgHasSrc = 2.5, coeffImgTitle = 3,
-  coeffItemprop = 0.5, coeffBadKeywords = 1, coeffGoodKeywords = 0.5, coeffClassKeywords = 1,
-  coeffTitleWords = 1, coeffAboveTheFold = 1, coeffLeftOfPage = 1, coeffSVGs = 1, coeffDataURLs = 1, titleWordsBase = 1.5) {
+function tunedImageFnodes(nodeToCssMap, coeffImgSize = 1.9, coeffImgHasSrc = 3.0, coeffImgTitle = 420.0,
+  coeffItemprop = 500.0, coeffBadKeywords = 0.05, coeffGoodKeywords = 800.0, coeffClassKeywords = 1300.0,
+  coeffTitleWords = 0.7, coeffAboveTheFold = 0.2, coeffLeftOfPage = 0.5, coeffSVGs = 0.1, coeffDataURLs = 0.1, titleWordsBase = 1.3) {
     let title = '';
 
     function imageSize(fnode) {
@@ -47,7 +47,7 @@ function tunedImageFnodes(nodeToCssMap, coeffImgSize = 2.5, coeffImgHasSrc = 2.5
       for (let i = 0; i < attrs.length; i++){
         if (fnode.element.getAttribute(attrs[i]) &&
             (fnode.element.getAttribute(attrs[i]).includes(title) || title.includes(fnode.element.getAttribute(attrs[i])))){
-              return 100 * coeffImgTitle;
+              return coeffImgTitle;
             }
       }
       return 1;
@@ -55,26 +55,26 @@ function tunedImageFnodes(nodeToCssMap, coeffImgSize = 2.5, coeffImgHasSrc = 2.5
 
     function itemprop(fnode){
       if (fnode.element.hasAttribute('itemprop') && fnode.element.getAttribute('itemprop').match(/(image|main|product|hero|feature)/i)){
-        return 1000 * coeffItemprop;
+        return coeffItemprop;
       }
     }
 
 
     function keywords(fnode) {
       if (fnode.element.hasAttribute('src') && fnode.element.src.match(/(thumb|logo|icon)/i)){
-        return 0.5 * coeffBadKeywords;
+        return coeffBadKeywords;
       }
 
       const attrs = ['src', 'id', 'alt', 'title'];
       for (let i = 0; i < attrs.length; i++){
         if (fnode.element.hasAttribute(attrs[i]) && fnode.element.getAttribute(attrs[i]).match(/(main|product|hero|feature|primary)/i)){
-          return 1000 * coeffGoodKeywords;
+          return coeffGoodKeywords;
         }
       }
 
       for (let i = 0; i < fnode.element.classList.length; i++){
         if (fnode.element.classList[i].match(/(hero|main|product|primary|feature)/i)){
-          return 1000 * coeffClassKeywords;
+          return coeffClassKeywords;
         }
       }
       return 1;
@@ -103,7 +103,7 @@ function tunedImageFnodes(nodeToCssMap, coeffImgSize = 2.5, coeffImgHasSrc = 2.5
       if (css.top < VIEWPORT_HEIGHT){
         return 1;
       }
-      return 0.5 * coeffAboveTheFold;
+      return coeffAboveTheFold;
     }
 
     function leftOfPage(fnode){
@@ -111,14 +111,14 @@ function tunedImageFnodes(nodeToCssMap, coeffImgSize = 2.5, coeffImgHasSrc = 2.5
       if (css.left < VIEWPORT_WIDTH/2){
         return 1;
       }
-      return 0.5 * coeffLeftOfPage;
+      return coeffLeftOfPage;
     }
 
     function notSVGs(fnode){
       if (fnode.element.hasAttribute('src') && fnode.element.getAttribute('src').includes('.svg')){
         return 0;
       }
-      return 1 * coeffSVGs;
+      return coeffSVGs;
     }
 
     function dataURLs(fnode){
@@ -126,7 +126,7 @@ function tunedImageFnodes(nodeToCssMap, coeffImgSize = 2.5, coeffImgHasSrc = 2.5
       if (fnode.element.hasAttribute('src') && fnode.element.getAttribute('src').includes('data:')){
         return 0;
       }
-      return 1 * coeffDataURLs;
+      return coeffDataURLs;
     }
 
 
@@ -195,22 +195,22 @@ function tunedTitleFnodes(nodeToCssMap) {
     return tuningRoutine;
 }
 
-
-function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSign = 1, coeffHasNumbers = 0.7,
-  coeffSpanBonus = 0.7, coeffSemanticTags = 1.9000000000000001, coeffCurrentPrice = 0.39999999999999997, coeffItemprop = 1, coeffKeywords = 1.3,
-  coeffStrike = 0.7, coeffNotSavings = 1.3, coeffAboveFold = 1.3, coeffCenterRight = 1.3, coeffMiddleHeight = 0.09999999999999998,
-  coeffBolded = 1, coeffNumNumbers = 0.39999999999999997, coeffNumDollarSigns = 0.39999999999999997, coeffPriceFormat = 0.7, coeffNumDots = 1.9000000000000001, coeffMetaTag = 7.3) {
+function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 4.4, coeffNearDollarSign = 3, coeffHasNumbers = 100,
+  coeffSpanBonus = 2, coeffSemanticTags = 5, coeffCurrentPrice = 2.6, coeffItemprop = 160, coeffKeywords = 2.6,
+  coeffStrike = 0.4, coeffNotSavings = 0.2, coeffAboveFold = 0.5, coeffCenterRight = 0.2, coeffMiddleHeight = 0.5,
+  coeffBolded = 4.4, coeffNumNumbers4 = 1.6, coeffNumNumbers8 = 0.8, coeffNumNumbers = 0.2, coeffNumDollarSigns = 0.05,
+  coeffPriceFormat = 2.6, coeffNumDots = 0.65, coeffMetaTag = 440) {
 
     function hasDollarSign(fnode){
       if (fnode.element.textContent.includes('$')){
-        return 2 * coeffDollarSign;
+        return coeffDollarSign;
       }
       return 1;
     }
 
     function nearDollarSign(fnode){
       if (fnode.element.previousSibling && fnode.element.previousSibling.textContent.includes('$')){
-        return 3 * coeffNearDollarSign;
+        return coeffNearDollarSign;
       }
       return 1;
     }
@@ -218,34 +218,33 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
     function hasNumbers(fnode){
       const regex = new RegExp(".*[0-9].*");
       if (fnode.element.textContent.match(regex)){
-        return 10 * coeffHasNumbers;
+        return coeffHasNumbers;
       }
       return 1;
     }
 
-
     function spanBonus(fnode){
       if (fnode.element.tagName === 'SPAN'){
-        return 2 * coeffSpanBonus;
+        return coeffSpanBonus;
       }
       return 1;
     }
 
     function semanticTags(fnode){
       if (fnode.element.getElementsByTagName('SUP').length > 0 || fnode.element.getElementsByTagName('STRONG') > 0){
-        return 2 * coeffSemanticTags;
+        return coeffSemanticTags;
       }
       return 1;
     }
 
     function priceIsCurrent(fnode){
       if (fnode.element.id.match(/(current|now)/i)){
-        return 2 * coeffCurrentPrice;
+        return coeffCurrentPrice;
       }
 
       for (let i = 0; i < fnode.element.classList.length; i++){
         if (fnode.element.classList[i].match(/(current|now)/i)){
-          return 2 * coeffCurrentPrice;
+          return coeffCurrentPrice;
         }
       }
       return 1;
@@ -253,20 +252,19 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
 
     function itemprop(fnode){
       if (fnode.element.hasAttribute('itemprop') && fnode.element.getAttribute('itemprop').match(/price/i)){
-        return 100 * coeffItemprop;
+        return coeffItemprop;
       }
       return 1;
     }
 
-
     function tagHasGoodCss(fnode){
       if (fnode.element.id.match(/(price|sale|deal|total)/i)){
-        return 2 * coeffKeywords;
+        return coeffKeywords;
       }
 
       for (let i = 0; i < fnode.element.classList.length; i++){
         if (fnode.element.classList[i].match(/(price|sale|deal|total)/i)){
-          return 2 * coeffKeywords;
+          return coeffKeywords;
         }
       }
       return 1;
@@ -283,7 +281,7 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
     function notSavingsAmount(fnode){
       const range_regex = "(.*[0-9].*)-(.*[0-9].*)";
       if (fnode.element.textContent.includes('-') && !fnode.element.textContent.match(range_regex)){
-        return 0.5 * coeffNotSavings;
+        return coeffNotSavings;
       }
       return 1;
     }
@@ -293,7 +291,7 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
       if (css.top < VIEWPORT_HEIGHT){
         return 1;
       }
-      return 0.5 * coeffAboveFold;
+      return coeffAboveFold;
     }
 
     function centerRightOfPage(fnode){
@@ -302,7 +300,7 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
       if (css.left > VIEWPORT_WIDTH/3 && css.left < VIEWPORT_WIDTH * 3/4){
         return 1;
       }
-      return 0.5 * coeffCenterRight;
+      return coeffCenterRight;
     }
 
     function middleHeight(fnode){
@@ -311,17 +309,17 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
       if (css.top > VIEWPORT_HEIGHT/6 && css.top < VIEWPORT_HEIGHT * 3/4){
         return 1;
       }
-      return 0.5 * coeffMiddleHeight;
+      return coeffMiddleHeight;
     }
 
     function bolded(fnode){
       if (fnode.element.id.match(/(bold)/i)){
-        return 2 * coeffBolded;
+        return coeffBolded;
       }
 
       for (let i = 0; i < fnode.element.classList.length; i++){
         if (fnode.element.classList[i].match(/(bold)/i)){
-          return 2 * coeffBolded;
+          return coeffBolded;
         }
       }
       return 1;
@@ -330,18 +328,18 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
     function numberOfNumbers(fnode){
       //one price often ~4 or <= 4 numbers
       if (fnode.element.textContent.match(/[0-9]/g) && fnode.element.textContent.match(/[0-9]/g).length <= 4){
-        return 4 * coeffNumNumbers;
+        return coeffNumNumbers4;
       }
       //two prices in a range often <= 8 numbers
       if (fnode.element.textContent.match(/[0-9]/g) && fnode.element.textContent.match(/[0-9]/g).length <= 8){
-        return 2 * coeffNumNumbers;
+        return coeffNumNumbers8;
       }
-      return 0.5 * coeffNumNumbers;
+      return coeffNumNumbers;
     }
 
     function numberOfDollarSigns(fnode){
       if (fnode.element.textContent.match(/[\$]/g) && fnode.element.textContent.match(/[\$]/g).length > 2){
-        return 0.5 * coeffNumDollarSigns;
+        return coeffNumDollarSigns;
       }
       return 1;
     }
@@ -350,14 +348,14 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
       if (fnode.element.textContent.match(/(.*[0-9].*)-(.*[0-9].*)/) ||
          fnode.element.textContent.match(/[\$][\\d]+[\\.][0-9][0-9]/) ||
          fnode.element.textContent.match(/\$[\\d]+/)){
-           return 2 * coeffPriceFormat;
+           return coeffPriceFormat;
          }
       return 1;
     }
 
     function numberOfDots(fnode){
       if (fnode.element.textContent.match(/\./g) && fnode.element.textContent.match(/\./g).length >= 2 && !fnode.element.textContent.includes('-')){
-        return 0.5 * coeffNumDots;
+        return coeffNumDots;
       }
       return 1;
     }
@@ -365,7 +363,7 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 1.6, coeffNearDollarSi
     function metaTags(fnode){
       if (fnode.element.tagName === 'META' && fnode.element.hasAttribute('itemprop') && fnode.element.getAttribute('itemprop').match(/price/i) &&
          !fnode.element.getAttribute('itemprop').match(/currency/i)){
-        return 100 * coeffMetaTag;
+        return coeffMetaTag;
       }
       return 1;
     }
