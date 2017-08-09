@@ -29,15 +29,15 @@ const VIEWPORT_HEIGHT = 960;
  * Remove dollar sign, strip whitespace, strip words (anything not numeric or a price symbol), and remove trailing zeros
  */
 function formatPrice(priceString){
-  priceString = priceString.replace('$', '').replace(/([\s]|[^0-9$.-])/g, '').replace(/(\.[0-9]*?)0+$/, '');
+  priceString = priceString.replace('$', '').replace(/([\s]|[^0-9$.-])/g, '');
   if (priceString.includes('$')){
     priceString = priceString.substr(priceString.indexOf('$') + 1);
   }
-  return priceString;
+  return parseFloat(priceString);
 }
 
 /*
- * Remove the query params from a url by getting the text that comes before a '?'
+ * Remove the query params from a url by removing the '?' and the text that comes after it
  */
 function withoutQueryParams(url){
   if (url.includes('?')){
@@ -56,10 +56,10 @@ function tunedImageFnodes(nodeToCssMap, coeffImgSize = 1.9, coeffImgHasSrc = 3.0
 
     function imageSize(fnode) {
       const css = nodeToCssMap.get(fnode.element);
-      if ((css.left - css.right) * (css.top - css.bottom) === 0){
+      if ((css.right - css.left) * (css.bottom - css.top) === 0){
         return 1;
       }
-      return (css.left - css.right) * (css.top - css.bottom) * coeffImgSize;
+      return (css.right - css.left) * (css.bottom - css.top) * coeffImgSize;
     }
 
     function imageHasSrc(fnode) {
@@ -151,7 +151,6 @@ function tunedImageFnodes(nodeToCssMap, coeffImgSize = 1.9, coeffImgHasSrc = 3.0
       }
       return coeffDataURLs;
     }
-
 
     const rules = ruleset(
       //get all images
@@ -601,7 +600,10 @@ if (require.main === module) {
     //For each feature, calculate score
     Object.keys(tuningRoutines).forEach(function(f){
       const annealer = new ProductOptimizer(f);
+
+      // Uncomment to optimize
       // tuningRoutines[f].coeffs = annealer.anneal();
+
       console.log('Tuned coeficients:', tuningRoutines[f].coeffs);
       console.log('% difference from ideal:', deviationScore(dataMap, folders, f, tuningRoutines[f].coeffs));
     });
