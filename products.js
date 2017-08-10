@@ -30,20 +30,14 @@ const VIEWPORT_HEIGHT = 960;
  */
 function formatPrice(priceString){
   priceString = priceString.replace('$', '').replace(/([\s]|[^0-9$.-])/g, '');
-  if (priceString.includes('$')){
-    priceString = priceString.substr(priceString.indexOf('$') + 1);
-  }
-  return parseFloat(priceString);
+  return parseFloat(priceString.substr(priceString.indexOf('$') + 1));
 }
 
 /*
  * Remove the query params from a url by removing the '?' and the text that comes after it
  */
 function withoutQueryParams(url){
-  if (url.includes('?')){
-    url = url.substr(0,url.indexOf('?'));
-  }
-  return url;
+  return url.substr(0,url.indexOf('?'));
 }
 
 /*
