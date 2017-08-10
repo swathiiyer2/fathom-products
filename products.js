@@ -492,7 +492,7 @@ class DiffStats {
           //strip whitespace, dollar sign, words, and trailing zeros when comparing price
           expectedText = formatPrice(expectedDom.body.firstChild.textContent);
           gotText = this.tuningRoutine(nodeToCssMap, ...coeffs)(sourceDom).map(fnode => fnode.element)[0];
-          gotText = (gotText.tagName !== 'META')? formatPrice(gotText.textContent) : formatPrice(gotText.getAttribute('content'));
+          gotText = formatPrice((gotText.tagName !== 'META')? gotText.textContent : gotText.getAttribute('content'));
 
         }
         this.numTests++;
