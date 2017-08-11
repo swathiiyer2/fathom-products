@@ -37,7 +37,10 @@ function formatPrice(priceString){
  * Remove the query params from a url by removing the '?' and the text that comes after it
  */
 function withoutQueryParams(url){
-  return url.substr(0,url.indexOf('?'));
+  if (url.includes('?')){
+    return url.substr(0,url.indexOf('?'));
+  }
+  return url;
 }
 
 /*
