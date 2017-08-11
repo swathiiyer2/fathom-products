@@ -37,8 +37,9 @@ function formatPrice(priceString){
  * Remove the query params from a url by removing the '?' and the text that comes after it
  */
 function withoutQueryParams(url){
-  if (url.includes('?')){
-    return url.substr(0,url.indexOf('?'));
+  var index = url.includes('?');
+  if (index !== -1){
+    return url.substr(0,index);
   }
   return url;
 }
