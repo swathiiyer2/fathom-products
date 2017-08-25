@@ -21,15 +21,16 @@ function collectCSS(dir) {
   const src = document.documentElement.outerHTML;
   const all = document.getElementsByTagName("*");
   for (let j = 0; j < all.length; j++) {
-       const curr = all[j].getBoundingClientRect();
+       const currNode = all[j];
+       const currRect = currNode.getBoundingClientRect();
        node_properties[j] = {
-                              "top" : curr.top,
-                              "bottom" : curr.bottom,
-                              "left" : curr.left,
-                              "right" : curr.right,
-                              "display" : all[j].style.display,
-                              "visibility" : all[j].style.visibility,
-                              "strikethrough" : window.getComputedStyle(all[j]).getPropertyValue('text-decoration')
+                              "top" : currRect.top,
+                              "bottom" : currRect.bottom,
+                              "left" : currRect.left,
+                              "right" : currRect.right,
+                              "display" : currNode.style.display,
+                              "visibility" : currNode.style.visibility,
+                              "strikethrough" : window.getComputedStyle(currNode).getPropertyValue('text-decoration')
                             };
   }
 
