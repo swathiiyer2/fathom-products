@@ -18,8 +18,8 @@ const {dom, props, out, rule, ruleset, score, type} = require('fathom-web');
 const {Annealer} = require('fathom-web/optimizers');
 const {staticDom} = require('fathom-web/utils');
 const tuningRoutines = {
-                        // 'title' : {'routine': tunedTitleFnodes, 'coeffs': []},
-                        // 'price' : {'routine': tunedPriceFnodes, 'coeffs':  [ 4.4, 3, 2, 5, 160, 2.6, 0.4, 0.2, 0.5, 0.2, 0.5, 1.6, 0.8, 0.2, 0.05, 440]},
+                        'title' : {'routine': tunedTitleFnodes, 'coeffs': []},
+                        'price' : {'routine': tunedPriceFnodes, 'coeffs':  [ 4.4, 3, 2, 5, 160, 2.6, 0.4, 0.2, 0.5, 0.2, 0.5, 1.6, 0.8, 0.2, 0.05, 440]},
                         'image' : {'routine': tunedImageFnodes, 'coeffs': [1.9, 420.0, 500.0, 0.05, 800.0, 1300.0, 0.7, 0.2, 0.5, 0.1, 1.3]}
                         };
 const VIEWPORT_WIDTH = 1680;
