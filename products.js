@@ -18,9 +18,9 @@ const {dom, props, out, rule, ruleset, score, type} = require('fathom-web');
 const {Annealer} = require('fathom-web/optimizers');
 const {staticDom} = require('fathom-web/utils');
 const tuningRoutines = {
-                        'title' : {'routine': tunedTitleFnodes, 'coeffs': []},
+                        // 'title' : {'routine': tunedTitleFnodes, 'coeffs': []},
                         'price' : {'routine': tunedPriceFnodes, 'coeffs':  [ 4.4, 3, 100, 2, 5, 2.6, 160, 2.6, 0.4, 0.2, 0.5, 0.2, 0.5, 4.4, 1.6, 0.8, 0.2, 0.05, 2.6, 0.65, 440]},
-                        'image' : {'routine': tunedImageFnodes, 'coeffs': [1.9, 3.0, 420.0, 500.0, 0.05, 800.0, 1300.0, 0.7, 0.2, 0.5, 0.1, 0.1, 1.3]}
+                        // 'image' : {'routine': tunedImageFnodes, 'coeffs': [1.9, 3.0, 420.0, 500.0, 0.05, 800.0, 1300.0, 0.7, 0.2, 0.5, 0.1, 0.1, 1.3]}
                         };
 const VIEWPORT_WIDTH = 1680;
 const VIEWPORT_HEIGHT = 960;
@@ -406,7 +406,7 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 4.4, coeffNearDollarSi
       rule(type('priceish'), score(nearDollarSign)),
 
       //text has numbers
-      rule(type('priceish'), score(hasNumbers)),
+      // rule(type('priceish'), score(hasNumbers)),
 
       //bonus for span tags, common for prices
       rule(type('priceish'), score(spanBonus)),
@@ -415,7 +415,7 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 4.4, coeffNearDollarSi
       rule(type('priceish'), score(semanticTags)),
 
       //check for keywords indicating the price is the current price
-      rule(type('priceish'), score(priceIsCurrent)),
+      // rule(type('priceish'), score(priceIsCurrent)),
 
       //check if the itemprop attibute has price keywords
       rule(type('priceish'), score(itemprop)),
@@ -439,7 +439,7 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 4.4, coeffNearDollarSi
       rule(type('priceish'), score(middleHeight)),
 
       //class/style keywords indicating its bolded
-      rule(type('priceish'), score(bolded)),
+      // rule(type('priceish'), score(bolded)),
 
       //number of numbers
       rule(type('priceish'), score(numberOfNumbers)),
@@ -448,10 +448,10 @@ function tunedPriceFnodes(nodeToCssMap, coeffDollarSign = 4.4, coeffNearDollarSi
       rule(type('priceish'), score(numberOfDollarSigns)),
 
       //number of decimal points
-      rule(type('priceish'), score(numberOfDots)),
+      // rule(type('priceish'), score(numberOfDots)),
 
       //if in one of three formats: price range, price with decimal (2 numbers after decimal), price without decimal
-      rule(type('priceish'), score(priceFormat)),
+      // rule(type('priceish'), score(priceFormat)),
 
       //check meta tags with itemprop = price
       rule(type('priceish'), score(metaTags)),
