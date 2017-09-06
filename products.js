@@ -19,8 +19,8 @@ const {Annealer} = require('fathom-web/optimizers');
 const {staticDom} = require('fathom-web/utils');
 const tuningRoutines = {
                         // 'title' : {'routine': tunedTitleFnodes, 'coeffs': []},
-                        'price' : {'routine': tunedPriceFnodes, 'coeffs':  [ 4.4, 3, 2, 5, 160, 2.6, 0.4, 0.2, 0.5, 0.2, 0.5, 1.6, 0.8, 0.2, 0.05, 440]},
-                        // 'image' : {'routine': tunedImageFnodes, 'coeffs': [1.9, 3.0, 420.0, 500.0, 0.05, 800.0, 1300.0, 0.7, 0.2, 0.5, 0.1, 0.1, 1.3]}
+                        // 'price' : {'routine': tunedPriceFnodes, 'coeffs':  [ 4.4, 3, 2, 5, 160, 2.6, 0.4, 0.2, 0.5, 0.2, 0.5, 1.6, 0.8, 0.2, 0.05, 440]},
+                        'image' : {'routine': tunedImageFnodes, 'coeffs': [1.9, 420.0, 500.0, 0.05, 800.0, 1300.0, 0.7, 0.2, 0.5, 0.1, 1.3]}
                         };
 const VIEWPORT_WIDTH = 1680;
 const VIEWPORT_HEIGHT = 960;
@@ -47,9 +47,9 @@ function withoutQueryParams(url){
 /*
  * Ruleset for product images
  */
-function tunedImageFnodes(nodeToCssMap, coeffImgSize = 1.9, coeffImgHasSrc = 3.0, coeffImgTitle = 420.0,
+function tunedImageFnodes(nodeToCssMap, coeffImgSize = 1.9, coeffImgTitle = 420.0,
   coeffItemprop = 500.0, coeffBadKeywords = 0.05, coeffGoodKeywords = 800.0, coeffClassKeywords = 1300.0,
-  coeffTitleWords = 0.7, coeffAboveTheFold = 0.2, coeffLeftOfPage = 0.5, coeffSVGs = 0.1, coeffDataURLs = 0.1, titleWordsBase = 1.3) {
+  coeffTitleWords = 0.7, coeffAboveTheFold = 0.2, coeffLeftOfPage = 0.5, coeffSVGs = 0.1, titleWordsBase = 1.3) {
     let title = '';
 
     function imageSize(fnode) {
@@ -58,10 +58,6 @@ function tunedImageFnodes(nodeToCssMap, coeffImgSize = 1.9, coeffImgHasSrc = 3.0
         return 1;
       }
       return (css.right - css.left) * (css.bottom - css.top) * coeffImgSize;
-    }
-
-    function imageHasSrc(fnode) {
-      return (fnode.element.hasAttribute('src') && fnode.element.getAttribute('src') !== '') * coeffImgHasSrc;
     }
 
     function imageTitle(fnode) {
@@ -142,23 +138,12 @@ function tunedImageFnodes(nodeToCssMap, coeffImgSize = 1.9, coeffImgHasSrc = 3.0
       return coeffSVGs;
     }
 
-    function notDataURLs(fnode){
-      const css = nodeToCssMap.get(fnode.element);
-      if (fnode.element.hasAttribute('src') && fnode.element.getAttribute('src').includes('data:')){
-        return 0;
-      }
-      return coeffDataURLs;
-    }
-
     const rules = ruleset(
       //get all images
       rule(dom('img'), type('images')),
 
       //better score for larger images
       rule(type('images'), score(imageSize)),
-
-      //make sure image has src
-      rule(type('images'), score(imageHasSrc)),
 
       //image title matches page title
       rule(type('images'), score(imageTitle)),
@@ -180,9 +165,6 @@ function tunedImageFnodes(nodeToCssMap, coeffImgSize = 1.9, coeffImgHasSrc = 3.0
 
       //eliminate images of type svg
       rule(type('images'), score(notSVGs)),
-
-      //image src likely will not be a data-url
-      rule(type('images'), score(notDataURLs)),
 
       //return image with max score
       rule(type('images').max(), out('product-image'))
