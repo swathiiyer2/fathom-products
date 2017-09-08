@@ -11,3 +11,7 @@
      All test sources are product detail pages (one main product on this page)
      Later, go on to extract products from a product index page (multiple products per page)
  
+## Usage
+
+  Run on training set using:
+	node --max-old-space-size=8192 products.js 
