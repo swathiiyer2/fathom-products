@@ -14,4 +14,5 @@
 ## Usage
 
   Run on training set using:
+
 	node --max-old-space-size=8192 products.js 
